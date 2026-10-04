@@ -4,7 +4,7 @@ on:
     inputs:
       max_img:
         description: "Quante immagini nuove scaricare in questo giro"
-        default: "300"
+        default: "2000"
   schedule:
     - cron: "0 * * * *"
 permissions:
@@ -22,7 +22,7 @@ jobs:
       - run: python prezzi.py
         env:
           CARDTRADER_TOKEN: ${{ secrets.CARDTRADER_TOKEN }}
-          MAX_IMG: ${{ github.event.inputs.max_img || '300' }}
+          MAX_IMG: ${{ github.event.inputs.max_img || '2000' }}
       - run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
