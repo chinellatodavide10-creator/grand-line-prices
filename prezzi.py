@@ -16,6 +16,7 @@ CM_GAME = 18  # One Piece su Cardmarket
 GAME = 15  # One Piece su CardTrader
 LANGS = ["en", "jp", "zh-CN"]
 OK_COND = {"Mint", "Near Mint"}
+PAUSE = float(os.environ.get("PAUSE") or 1.2)  # pausa tra le chiamate a CardTrader
 SKIP_EXP = set()  # codici di espansione da ignorare, per esempio {"OP01"}
 
 NEG = re.compile(r"\b(ungraded|not\s+graded|non\s+graded|raw|not\s+psa|not\s+bgs|no\s+psa|no\s+bgs|candidate|candidato|ready|for\s+(psa|bgs)|to\s+(psa|bgs)|grading|gradable)\b", re.I)
@@ -42,18 +43,20 @@ def grade_of(desc):
 
 def get(path):
     r = urllib.request.Request(B + path, headers={"Authorization": "Bearer " + T})
-    for i in range(3):
+    for i in range(6):
         try:
-            with urllib.request.urlopen(r, timeout=120) as x:
-                return json.load(x)
+            with urllib.request.urlopen(r, timeout=180) as x:
+                data = json.load(x)
+            time.sleep(PAUSE)
+            return data
         except urllib.error.HTTPError as e:
-            if e.code == 429 and i < 2:
-                time.sleep(5)
+            if e.code in (429, 500, 502, 503, 504) and i < 5:
+                time.sleep(8 * (i + 1))
                 continue
             raise
         except Exception:
-            if i < 2:
-                time.sleep(2)
+            if i < 5:
+                time.sleep(4 * (i + 1))
                 continue
             raise
 
@@ -152,6 +155,7 @@ print("Espansioni One Piece su CardTrader:", len(expansions))
 
 P_, C_, CI_, GR_ = {}, {}, {}, {}
 catalog, exps_out, to_download = [], [], []
+failed = []
 for e in expansions:
     code = (e.get("code") or str(e["id"])).upper()
     if code in SKIP_EXP:
@@ -161,8 +165,8 @@ for e in expansions:
         prods = get("/marketplace/products?expansion_id=%d" % e["id"])
     except Exception as ex:
         print("Espansione saltata", code, str(ex)[:80])
+        failed.append(code)
         continue
-    time.sleep(0.15)
     items = [(b["id"], (b.get("fixed_properties") or {}).get("collector_number"), b.get("version")) for b in bps]
     items = [i for i in items if i[1]]
     if not items:
@@ -266,6 +270,20 @@ for row in catalog:
 
 if not cm_ok:
     C_, CI_ = prev_latest.get("c", {}), prev_latest.get("ci", {})
+# le espansioni che non si sono caricate restano come erano al giro precedente
+for code in failed:
+    for row in prev_cat.get("cards", []):
+        if row[2] == code:
+            catalog.append(row)
+    for e in prev_cat.get("exps", []):
+        if e[0] == code and e not in exps_out:
+            exps_out.append(e)
+    for sect, dst in (("p", P_), ("c", C_), ("ci", CI_), ("g", GR_)):
+        for k, v in (prev_latest.get(sect) or {}).items():
+            if k.startswith(code + ":") and k not in dst:
+                dst[k] = v
+if failed:
+    print("ATTENZIONE - espansioni non caricate in questo giro (uso i dati di prima):", ", ".join(failed))
 
 dump("catalogo.json", {"exps": exps_out, "cards": catalog})
 dump("prezzi_latest.json", {"fmt": 2, "updated": stamp, "langs": LANGS, "cmDate": cm_date, "p": P_, "c": C_, "ci": CI_, "g": GR_})
