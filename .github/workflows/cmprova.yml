@@ -1,0 +1,8 @@
+name: Prova Cardmarket
+on: workflow_dispatch
+jobs:
+  prova:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python cmprova.py
