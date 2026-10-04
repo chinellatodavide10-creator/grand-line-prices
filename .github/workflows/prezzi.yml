@@ -1,0 +1,21 @@
+name: Aggiorna prezzi
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+permissions:
+  contents: write
+jobs:
+  prezzi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python prezzi.py
+        env:
+          CARDTRADER_TOKEN: ${{ secrets.CARDTRADER_TOKEN }}
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add prices.json
+          git commit -m "Aggiorna prezzi" || echo "Nessuna modifica"
+          git push
