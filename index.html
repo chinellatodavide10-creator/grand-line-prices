@@ -161,7 +161,7 @@ table{border-color:var(--line)}tr.best{background:rgba(94,230,176,.13)}.ok{backg
 
 #md{overscroll-behavior:contain}
 
-body.mo{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+
 </style>
 </head>
 <body>
@@ -333,7 +333,8 @@ $("rs3").onclick=()=>{try{const o=JSON.parse($("rs2").value);if(!o||typeof o.col
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadPrices()});setInterval(()=>loadPrices(),600000);
 view("home");setChip();loadPrices();
 </script>
-<script>(function(){var md=document.getElementById("md");if(!md)return;var y=0,on=false;new MutationObserver(function(){var o=md.classList.contains("on");if(o&&!on){y=window.pageYOffset||0;document.body.style.top=-y+"px";document.body.classList.add("mo")}else if(!o&&on){var h=document.documentElement;h.style.scrollBehavior="auto";document.body.classList.remove("mo");document.body.style.top="";window.scrollTo(0,y);setTimeout(function(){h.style.scrollBehavior=""},50)}on=o}).observe(md,{attributes:true,attributeFilter:["class"]})})();</script>
+<script>(function(){var md=document.getElementById("md");if(!md)return;
+md.addEventListener("touchmove",function(e){var t=e.target,sc=document.getElementById("sc");var inSc=t.closest&&t.closest(".sc");if(!inSc||(sc&&sc.scrollHeight<=sc.clientHeight+1)){if(e.cancelable)e.preventDefault()}},{passive:false})})();</script>
 <script>(function(){var bx=document.getElementById("bx"),md=document.getElementById("md");if(!bx||!md)return;var y0=null,dy=0,drag=false;
 function sheet(){return window.matchMedia("(max-width:640px) and (orientation:portrait)").matches}
 function sc(){return document.getElementById("sc")}
