@@ -69,7 +69,7 @@ select{background:var(--card);color:var(--tx);border:1px solid var(--line);borde
 .dt{display:grid;grid-template-columns:minmax(110px,34%) 1fr;gap:16px;align-items:start}
 .dt .art{border-radius:10px;overflow:hidden}
 .back{background:none;border:1px solid #2f6fe0;border-radius:8px;padding:8px 14px;margin-bottom:14px}
-.x{position:absolute;top:14px;right:16px;background:none;border:0;font-size:22px;color:var(--mut)}
+.x{position:sticky;top:6px;display:block;margin:-14px -10px -34px auto;width:40px;height:40px;border-radius:50%;background:rgba(14,17,24,.88);border:1px solid var(--line);font-size:20px;line-height:1;color:var(--mut);z-index:6;padding:0}.grab{display:none}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chips span{border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:13px}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.bx{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--card)}
 .bx small{color:var(--mut)}.bx b{display:block;font-size:clamp(20px,4.5vw,30px);margin-top:4px}
@@ -108,7 +108,7 @@ tr.best{background:#0f2a1d}.ok{display:inline-block;background:var(--up);color:#
 .chips{justify-content:center}.chips span{padding:4px 10px;font-size:12px}
 .two{grid-template-columns:1fr 1fr}.bx{padding:12px}.bx b{font-size:22px}
 table{font-size:13px}td,th{padding:9px 6px}
-.x{top:8px;right:12px}}
+.x{top:4px;margin:-8px -4px -34px auto}.grab{display:block;width:44px;height:5px;border-radius:3px;background:#3a4252;margin:-8px auto 10px}}
 .foot{color:var(--mut);font-size:12px;padding:20px;max-width:1000px;margin:0 auto}
 
 /* ===== tema colori della copertina ===== */
@@ -159,7 +159,7 @@ table{border-color:var(--line)}tr.best{background:rgba(94,230,176,.13)}.ok{backg
 .hero{background-position:center 38%}
 @media(max-width:640px) and (orientation:portrait){.hero{background-position:center 64%}}
 
-#md{overscroll-behavior:contain;touch-action:none}
+#md{overscroll-behavior:contain}
 .box{overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}
 body.mo{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 </style>
@@ -223,7 +223,7 @@ const v=R.filter(x=>(!q||(x.n+" "+x.code).toLowerCase().includes(q))&&(!fs||x.la
 v.sort({up:(a,b)=>b.pc-a.pc,dn:(a,b)=>a.pc-b.pc,hi:(a,b)=>(!!a.nop-!!b.nop)||b.cur-a.cur,lo:(a,b)=>(!!a.nop-!!b.nop)||a.cur-b.cur,cd:(a,b)=>a.code.localeCompare(b.code)||a.lang.localeCompare(b.lang)||a.ver.localeCompare(b.ver),az:(a,b)=>a.n.localeCompare(b.n)}[s]);
 $("cnt").textContent=v.length+" versioni trovate";
 const lim=window.LIM||120;$("more").hidden=v.length<=lim;$("more").textContent="Mostra altre carte ("+(v.length-lim)+" rimaste)";$("list").innerHTML=v.length?v.slice(0,lim).map(x=>tile(x)).join(""):`<div class="empty" style="grid-column:1/-1">Nessuna carta trovata. Prova con un altro nome o cambia i filtri.</div>`}
-function show(h){$("bx").innerHTML=`<button class="x" id="cl" aria-label="Chiudi">✕</button>`+h;$("md").classList.add("on");$("cl").onclick=()=>$("md").classList.remove("on");const b=$("bk");if(b)b.onclick=$("cl").onclick}
+function show(h){$("bx").style.transform="";$("bx").innerHTML=`<button class="x" id="cl" aria-label="Chiudi">✕</button><div class="grab"></div>`+h;$("md").classList.add("on");$("cl").onclick=()=>$("md").classList.remove("on");const b=$("bk");if(b)b.onclick=$("cl").onclick}
 function detail(id){const x=rows().find(r=>r.id===id),L=H[H.length-1],own=S.coll[id]&&S.coll[id].paid!=null,pts=ser(id).map(p=>p.v);
 if(x.nop){show(`<div class="dt" style="--c:${COL[x.col]}">${art(x)}<div><button class="back" id="bk">← Torna alle carte</button><h2 style="margin:0">${x.n}</h2><div class="chips"><span>${x.code}</span><span>${FLAG[x.lang]} ${LANG[x.lang]}</span><span>${x.ver}</span><span>${RAR[x.r]}</span>${x.pw?`<span>Potenza ${x.pw}</span>`:""}</div><div class="bx"><small>Prezzo attuale</small><b style="font-size:20px">Non ancora disponibile</b><span class="cap">Per questa versione non ci sono prezzi né su CardTrader né su Cardmarket al momento.</span></div></div></div>${gradedBlock(id)}${acts(id)}`);bindActs(id);return}
 const ch=chart(pts);const cdd=CARDS.find(c=>c.id===id);if(cdd&&HC[cdd.exp]===undefined)ensureHist(cdd,()=>{if($("md").classList.contains("on")&&$("bx").dataset.id===id)detail(id)});$("bx").dataset.id=id;
@@ -334,5 +334,11 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadPrices
 view("home");setChip();loadPrices();
 </script>
 <script>(function(){var md=document.getElementById("md");if(!md)return;var y=0,on=false;new MutationObserver(function(){var o=md.classList.contains("on");if(o&&!on){y=window.pageYOffset||0;document.body.style.top=-y+"px";document.body.classList.add("mo")}else if(!o&&on){document.body.classList.remove("mo");document.body.style.top="";window.scrollTo(0,y)}on=o}).observe(md,{attributes:true,attributeFilter:["class"]})})();</script>
+<script>(function(){var bx=document.getElementById("bx"),md=document.getElementById("md");if(!bx||!md)return;var y0=null,dy=0,drag=false;
+function sheet(){return window.matchMedia("(max-width:640px) and (orientation:portrait)").matches}
+bx.addEventListener("touchstart",function(e){if(!sheet()||bx.scrollTop>0||e.touches.length!==1){y0=null;return}y0=e.touches[0].clientY;dy=0;drag=false},{passive:true});
+bx.addEventListener("touchmove",function(e){if(y0===null)return;dy=e.touches[0].clientY-y0;if(dy>8&&bx.scrollTop<=0){drag=true;bx.style.transition="none";bx.style.transform="translateY("+dy+"px)";if(e.cancelable)e.preventDefault()}else if(dy<=0&&!drag){y0=null}},{passive:false});
+function end(){if(y0===null)return;bx.style.transition="transform .2s";if(drag&&dy>110){bx.style.transform="translateY(100%)";setTimeout(function(){md.classList.remove("on");bx.style.transform="";bx.style.transition=""},180)}else{bx.style.transform="";setTimeout(function(){bx.style.transition=""},220)}y0=null;drag=false}
+bx.addEventListener("touchend",end);bx.addEventListener("touchcancel",end)})();</script>
 </body>
 </html>
