@@ -1,0 +1,25 @@
+name: Impronte carte
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * 1"
+permissions:
+  contents: write
+concurrency:
+  group: prezzi
+  cancel-in-progress: false
+jobs:
+  fp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pillow
+      - run: python fp_build.py
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Impronte carte" || echo "Nessuna modifica"
+          git pull --rebase || true
+          git push
