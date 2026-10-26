@@ -115,6 +115,22 @@ def download(item):
         return bp, False
 
 
+def thin(snaps):
+    """Ultimi 90 giorni: un rilevamento al giorno. Prima: uno a settimana (l'ultimo della settimana). Massimo circa 2 anni."""
+    limit = (now - datetime.timedelta(days=90)).strftime("%Y-%m-%d")
+    cutoff = (now - datetime.timedelta(days=730)).strftime("%Y-%m-%d")
+    out, weeks = [], {}
+    for s in sorted(snaps, key=lambda s: s.get("d", "")):
+        d = s.get("d", "")
+        if d < cutoff:
+            continue
+        if d >= limit:
+            out.append(s)
+        else:
+            y, w, _ = datetime.date.fromisoformat(d).isocalendar()
+            weeks[(y, w)] = s
+    return sorted(weeks.values(), key=lambda s: s["d"]) + out
+
 now = datetime.datetime.now(datetime.timezone.utc)
 stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 today = now.strftime("%Y-%m-%d")
@@ -135,7 +151,7 @@ if prev_latest.get("fmt") == 2 and prev_latest.get("updated", "")[:10] < today:
         sh = load("h/%s.json" % exp, {"snaps": []})
         snaps = [s for s in sh["snaps"] if s.get("d") != prev_latest["updated"][:10]]
         snaps.append({"d": prev_latest["updated"][:10], "t": prev_latest["updated"], "p": d.get("p", {}), "c": d.get("c", {})})
-        dump("h/%s.json" % exp, {"snaps": snaps[-60:]})
+        dump("h/%s.json" % exp, {"snaps": thin(snaps)})
 
 # --- Cardmarket: listino ufficiale pubblico ---
 try:
@@ -223,6 +239,9 @@ for e in expansions:
         en = jp = None
         if len(ids) >= 2:
             en, jp = ids[0], ids[1]
+            # se per questa carta l'ordine e' invertito (lo capiamo dall'espansione Cardmarket) lo correggiamo
+            if en_exp is not None and jp_exp is not None and en_exp != jp_exp and CMEXP.get(ids[0]) == jp_exp and CMEXP.get(ids[1]) == en_exp:
+                en, jp = ids[1], ids[0]
         elif len(ids) == 1:
             x = CMEXP.get(ids[0])
             if x is not None and x == en_exp:
